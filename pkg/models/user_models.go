@@ -2,6 +2,7 @@ package models
 
 import (
 	"passwordless-login/pkg/config"
+	"time"
 
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/hotp"
@@ -198,4 +199,19 @@ func DeleteUserProfile(id string) (*mongo.DeleteResult, error) {
 	} else {
 		return nil, err
 	}
+}
+
+func SetOTP(element string, otp string) error {
+	return redisDb.Set(rCtx, element, otp, 30*time.Minute).Err()
+}
+
+func CheckOTP(element string, otp string) (bool, error) {
+	if storedOtp, err := redisDb.Get(rCtx, element).Result(); err != nil {
+		return false, err
+	} else {
+		if storedOtp == otp {
+			return true, nil
+		}
+	}
+	return false, nil
 }
