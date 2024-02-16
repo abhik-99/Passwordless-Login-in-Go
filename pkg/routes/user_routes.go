@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"passwordless-login/pkg/controllers"
+	"github.com/abhik-99/passwordless-login/pkg/controllers"
 
 	"github.com/gorilla/mux"
 )

@@ -1,4 +1,4 @@
-module passwordless-login
+module github.com/abhik-99/passwordless-login
 
 go 1.19
 

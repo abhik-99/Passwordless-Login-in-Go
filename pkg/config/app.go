@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/abhik-99/passwordless-login/pkg/utils"
+
 	"github.com/go-redis/redis/v8"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -24,10 +25,8 @@ var (
 )
 
 func Connect() {
-	var myEnv map[string]string
-	myEnv, _ = godotenv.Read("../../.env")
 	MongoCtx, mongoCancel = context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(MongoCtx, options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@cluster0.w7ovegb.mongodb.net/?retryWrites=true&w=majority", myEnv["DBUser"], myEnv["DBPass"])))
+	client, err := mongo.Connect(MongoCtx, options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@cluster0.w7ovegb.mongodb.net/?retryWrites=true&w=majority", utils.GetENV("DBUSER"), utils.GetENV("DBPASS"))))
 	if err != nil {
 		// panic(err)
 		fmt.Println(err)
@@ -36,7 +35,7 @@ func Connect() {
 
 	Rdb = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
-		Password: myEnv["RedisPass"],
+		Password: utils.GetENV("REDISPASS"),
 		DB:       0, // use default DB
 	})
 
