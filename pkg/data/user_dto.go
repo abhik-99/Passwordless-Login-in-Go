@@ -1,6 +1,8 @@
 package data
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // Input validation for required values and such
 type CreateUserDTO struct {

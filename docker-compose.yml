@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  redis:
+    image: "redis:latest"
+    environment:
+      - REDIS_PASSWORD=${REDISPASS}
+    ports:
+      - "6379:6379"
+    networks:
+      - backend_network
+
+  mongodb:
+    image: "mongo:latest"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${DBUSER}
+      - MONGO_INITDB_ROOT_PASSWORD=${DBPASS}
+    ports:
+      - "27017:27017"
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    # driver: bridge

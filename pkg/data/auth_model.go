@@ -4,12 +4,11 @@ import (
 	"time"
 
 	"github.com/abhik-99/passwordless-login/pkg/config"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Auth struct {
-	userId primitive.ObjectID
-	otp    string
+	UserId string
+	Otp    string
 }
 
 var (
@@ -18,14 +17,14 @@ var (
 )
 
 func (a *Auth) SetOTPForUser() error {
-	return redisDb.Set(rCtx, a.userId.Hex(), a.otp, 30*time.Minute).Err()
+	return redisDb.Set(rCtx, a.UserId, a.Otp, 30*time.Minute).Err()
 }
 
 func (a *Auth) CheckOTP() (bool, error) {
-	if storedOtp, err := redisDb.Get(rCtx, a.userId.Hex()).Result(); err != nil {
+	if storedOtp, err := redisDb.Get(rCtx, a.UserId).Result(); err != nil {
 		return false, err
 	} else {
-		if storedOtp == a.otp {
+		if storedOtp == a.Otp {
 			return true, nil
 		}
 	}

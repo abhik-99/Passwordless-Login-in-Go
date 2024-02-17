@@ -26,7 +26,7 @@ var (
 
 func Connect() {
 	MongoCtx, mongoCancel = context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(MongoCtx, options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@cluster0.w7ovegb.mongodb.net/?retryWrites=true&w=majority", utils.GetENV("DBUSER"), utils.GetENV("DBPASS"))))
+	client, err := mongo.Connect(MongoCtx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s@localhost:27017/?retryWrites=true&w=majority", utils.GetENV("DBUSER"), utils.GetENV("DBPASS"))))
 	if err != nil {
 		// panic(err)
 		fmt.Println(err)
