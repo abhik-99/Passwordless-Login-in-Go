@@ -9,11 +9,16 @@ import (
 // Un-Protected Routes
 func RegisterAuthRoutes(r *mux.Router) {
 
-	//Because this initiates the authentication, the Email or Phone number can be passed via URL
-	r.HandleFunc("/email/{emailId}", controllers.LoginViaEmail).Methods("GET")
-	r.HandleFunc("/email/{emailId}/verify-otp", controllers.VerifyEmailLoginOTP).Methods("POST")
+	r.HandleFunc("/singup", controllers.Signup).Methods("POST")
 
-	//Because this initiates the authentication, the Email or Phone number can be passed via URL
-	r.HandleFunc("/phone/{phoneNo}", controllers.LoginViaPhone).Methods("GET")
-	r.HandleFunc("/phone/{phoneNo}/verify-otp", controllers.VerifyPhoneLoginOTP).Methods("POST")
+	//This initiates the Email-based authentication,
+	r.HandleFunc("/email/{emailId}", controllers.OTPViaEmail).Methods("GET")
+	//the Email & OTP can be passed via REQ Body
+	r.HandleFunc("/email", controllers.LoginViaEmail).Methods("POST")
+
+	//This initiates the Phone-based authentication,
+	r.HandleFunc("/phone/{phoneNo}", controllers.OTPViaPhone).Methods("GET")
+	// the Phone number & OTP can be passed via REQ Body
+	r.HandleFunc("/phone", controllers.LoginViaPhone).Methods("POST")
+
 }

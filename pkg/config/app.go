@@ -34,7 +34,7 @@ func Connect() {
 	Db = client.Database("passwordless-auth")
 
 	Rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     utils.GetENV("REDISADDR"),
 		Password: utils.GetENV("REDISPASS"),
 		DB:       0, // use default DB
 	})

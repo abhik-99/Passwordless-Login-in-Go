@@ -1,8 +1,6 @@
 package data
 
 import (
-	"time"
-
 	"github.com/abhik-99/passwordless-login/pkg/config"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,9 +20,6 @@ type User struct {
 var (
 	userCollection = config.Db.Collection("user-collection")
 	ctx            = config.MongoCtx
-
-	redisDb = config.Rdb
-	rCtx    = config.RedisCtx
 )
 
 func CreateNewUser(user CreateUserDTO) (*mongo.InsertOneResult, error) {
@@ -94,19 +89,4 @@ func DeleteUserProfile(id string) (*mongo.DeleteResult, error) {
 	} else {
 		return nil, err
 	}
-}
-
-func SetOTPForUser(userId string, otp string) error {
-	return redisDb.Set(rCtx, userId, otp, 30*time.Minute).Err()
-}
-
-func CheckOTP(userId string, otp string) (bool, error) {
-	if storedOtp, err := redisDb.Get(rCtx, userId).Result(); err != nil {
-		return false, err
-	} else {
-		if storedOtp == otp {
-			return true, nil
-		}
-	}
-	return false, nil
 }
