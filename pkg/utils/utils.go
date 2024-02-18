@@ -15,6 +15,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/twilio/twilio-go"
+	api "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
 var validate = validator.New()
@@ -121,4 +123,16 @@ func SendOTPMail(receipientEmail string, otp string) error {
 	}
 	return nil
 
+}
+
+func SendOTPSms(receipientNo string, otp string) error {
+	client := twilio.NewRestClient()
+
+	params := &api.CreateMessageParams{}
+	params.SetBody(fmt.Sprintf("Your OTP for Login is %s.", otp))
+	params.SetFrom(GetENV("TWILLIO_PHONE_NO"))
+	params.SetTo(receipientNo)
+
+	_, err := client.Api.CreateMessage(params)
+	return err
 }

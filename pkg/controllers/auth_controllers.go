@@ -14,7 +14,15 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	var newUser data.CreateUserDTO
 	err := utils.DecodeJSONRequest(r, &newUser)
 	if err != nil {
-		utils.EncodeJSONResponse(w, http.StatusBadRequest, err)
+		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
+			utils.GenericJsonResponseDTO
+			err error
+		}{
+			GenericJsonResponseDTO: utils.GenericJsonResponseDTO{
+				Message: "Invalid Request Body",
+			},
+			err: err,
+		})
 		return
 	}
 	if _, err := data.CreateNewUser(newUser); err != nil {
@@ -29,13 +37,12 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 func OTPViaEmail(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if email, err := mail.ParseAddress(params["emailId"]); err != nil {
-
-		utils.EncodeJSONResponse(w, http.StatusBadRequest, err)
+		http.Error(w, "Invalid Email", http.StatusBadRequest)
 		return
 	} else {
 		if result, userID, lookUpErr := data.UserLookupViaEmail(email.String()); lookUpErr != nil {
 			http.Error(w, "Error Ocurred while Lookup", http.StatusInternalServerError)
-			fmt.Println("[ERROR]", lookUpErr)
+			fmt.Println("[ERROR] ", lookUpErr)
 			return
 		} else if !result {
 			http.Error(w, "User Not Found", http.StatusNotFound)
@@ -44,26 +51,27 @@ func OTPViaEmail(w http.ResponseWriter, r *http.Request) {
 			otp, err := utils.OTPGenerator()
 			if err != nil {
 				http.Error(w, "Error Occurred while generating user OTP", http.StatusInternalServerError)
-				fmt.Println("[ERROR]", err)
+				fmt.Println("[ERROR] ", err)
 				return
 			}
 			a := data.Auth{UserId: userID, Otp: otp}
 			if err := a.SetOTPForUser(); err != nil {
 				http.Error(w, "Error Occurred while setting user OTP", http.StatusInternalServerError)
-				fmt.Println("[ERROR]", err)
+				fmt.Println("[ERROR] ", err)
 				return
 			}
 			if err := utils.SendOTPMail(email.String(), otp); err != nil {
 				http.Error(w, "Error Occurred while setting user OTP", http.StatusInternalServerError)
-				fmt.Println("[ERROR]", err)
+				fmt.Println("[ERROR] ", err)
 				return
 			}
 
-			utils.EncodeJSONResponse(w, http.StatusOK, map[string]string{"message": "User OTP sent"})
+			utils.EncodeJSONResponse(w, http.StatusOK, utils.GenericJsonResponseDTO{Message: "User OTP sent"})
 
 		}
 	}
 }
+
 func OTPViaPhone(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	phoneNo := params["phoneNo"]
@@ -73,19 +81,31 @@ func OTPViaPhone(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if result, userID, lookUpErr := data.UserLookupViaPhone(phoneNo); lookUpErr != nil {
 			http.Error(w, "Error Ocurred while Lookup", http.StatusInternalServerError)
-			fmt.Println("[ERROR]", lookUpErr)
+			fmt.Println("[ERROR] ", lookUpErr)
 			return
 		} else if !result {
 			http.Error(w, "User Not Found", http.StatusNotFound)
 			return
 		} else {
-			a := data.Auth{UserId: userID, Otp: "123456"}
-			if err := a.SetOTPForUser(); err != nil {
-				http.Error(w, "Error Occurred while setting user OTP", http.StatusInternalServerError)
-				fmt.Println("[ERROR]", err)
+			otp, err := utils.OTPGenerator()
+			if err != nil {
+				http.Error(w, "Error Occurred while generating user OTP", http.StatusInternalServerError)
+				fmt.Println("[ERROR] ", err)
 				return
 			}
-			utils.EncodeJSONResponse(w, http.StatusOK, map[string]string{"message": "User OTP sent"})
+			a := data.Auth{UserId: userID, Otp: otp}
+			if err := a.SetOTPForUser(); err != nil {
+				http.Error(w, "Error Occurred while setting user OTP", http.StatusInternalServerError)
+				fmt.Println("[ERROR] ", err)
+				return
+			}
+			if err := utils.SendOTPSms(phoneNo, otp); err != nil {
+				http.Error(w, "Error Occurred while setting user OTP", http.StatusInternalServerError)
+				fmt.Println("[ERROR] ", err)
+				return
+			}
+
+			utils.EncodeJSONResponse(w, http.StatusOK, utils.GenericJsonResponseDTO{Message: "User OTP sent"})
 
 		}
 	}
@@ -95,36 +115,89 @@ func LoginViaEmail(w http.ResponseWriter, r *http.Request) {
 	var dto data.LoginWithEmailDTO
 	err := utils.DecodeJSONRequest(r, dto)
 	if err != nil {
-		utils.EncodeJSONResponse(w, http.StatusBadRequest, err)
+		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
+			utils.GenericJsonResponseDTO
+			err error
+		}{
+			GenericJsonResponseDTO: utils.GenericJsonResponseDTO{
+				Message: "Invalid Request Body",
+			},
+			err: err,
+		})
 		return
 	}
 	result, userID, lookUpErr := data.UserLookupViaEmail(dto.Email)
 
 	if !result {
-		utils.EncodeJSONResponse(w, http.StatusNotFound, "User Does not Exist")
+		http.Error(w, "User Does not Exist", http.StatusNotFound)
 		return
 	}
 	if lookUpErr != nil {
 		http.Error(w, "Error Ocurred while Lookup", http.StatusInternalServerError)
-		fmt.Println("[ERROR]", lookUpErr)
+		fmt.Println("[ERROR] ", lookUpErr)
 		return
 	}
 	a := data.Auth{UserId: userID, Otp: dto.Otp}
 	if result, err := a.CheckOTP(); err != nil {
 		http.Error(w, "Error Ocurred while verifying OTP", http.StatusInternalServerError)
-		fmt.Println("[ERROR]", err)
+		fmt.Println("[ERROR] ", err)
 		return
 	} else if !result {
-		utils.EncodeJSONResponse(w, http.StatusBadRequest, "OTP Does not Match")
+		http.Error(w, "OTP Does not Match", http.StatusBadRequest)
 		return
 	}
 
 	if result, err := utils.GenerateJWT(userID); err != nil {
-		utils.EncodeJSONResponse(w, http.StatusBadRequest, utils.GenericJsonResponseDTO{Message: "Error Occured while access token generation "})
+		http.Error(w, "Error Occured during access token generation", http.StatusBadRequest)
+		fmt.Println("[ERROR] ", err)
 		return
 	} else {
 		utils.EncodeJSONResponse(w, http.StatusOK, data.AccessTokenDTO{AccessToken: result})
 	}
 
 }
-func LoginViaPhone(w http.ResponseWriter, r *http.Request) {}
+
+func LoginViaPhone(w http.ResponseWriter, r *http.Request) {
+	var dto data.LoginWithPhoneDTO
+	err := utils.DecodeJSONRequest(r, dto)
+	if err != nil {
+		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
+			utils.GenericJsonResponseDTO
+			err error
+		}{
+			GenericJsonResponseDTO: utils.GenericJsonResponseDTO{
+				Message: "Invalid Request Body",
+			},
+			err: err,
+		})
+		return
+	}
+	result, userID, lookUpErr := data.UserLookupViaPhone(dto.Phone)
+
+	if !result {
+		http.Error(w, "User Does not Exist", http.StatusNotFound)
+		return
+	}
+	if lookUpErr != nil {
+		http.Error(w, "Error Ocurred while Lookup", http.StatusInternalServerError)
+		fmt.Println("[ERROR] ", lookUpErr)
+		return
+	}
+	a := data.Auth{UserId: userID, Otp: dto.Otp}
+	if result, err := a.CheckOTP(); err != nil {
+		http.Error(w, "Error Ocurred while verifying OTP", http.StatusInternalServerError)
+		fmt.Println("[ERROR] ", err)
+		return
+	} else if !result {
+		http.Error(w, "OTP Does not Match", http.StatusBadRequest)
+		return
+	}
+
+	if result, err := utils.GenerateJWT(userID); err != nil {
+		http.Error(w, "Error Occured during access token generation", http.StatusBadRequest)
+		fmt.Println("[ERROR] ", err)
+		return
+	} else {
+		utils.EncodeJSONResponse(w, http.StatusOK, data.AccessTokenDTO{AccessToken: result})
+	}
+}

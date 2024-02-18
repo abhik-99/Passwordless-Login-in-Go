@@ -13,9 +13,11 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/sendgrid/rest v2.6.9+incompatible // indirect
 	github.com/sendgrid/sendgrid-go v3.14.0+incompatible // indirect
+	github.com/twilio/twilio-go v1.18.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 )
