@@ -16,17 +16,17 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
 			utils.GenericJsonResponseDTO
-			err error
+			Err string `json:"err"`
 		}{
 			GenericJsonResponseDTO: utils.GenericJsonResponseDTO{
 				Message: "Invalid Request Body",
 			},
-			err: err,
+			Err: err.Error(),
 		})
 		return
 	}
 	if _, err := data.CreateNewUser(newUser); err != nil {
-		utils.EncodeJSONResponse(w, http.StatusInternalServerError, utils.GenericJsonResponseDTO{Message: "Error Occurred while Creating user"})
+		http.Error(w, "Error Occurred while Creating user", http.StatusInternalServerError)
 		return
 	} else {
 		utils.EncodeJSONResponse(w, http.StatusOK, utils.GenericJsonResponseDTO{Message: "User Created Successfully"})
@@ -117,12 +117,12 @@ func LoginViaEmail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
 			utils.GenericJsonResponseDTO
-			err error
+			Err string `json:"err"`
 		}{
 			GenericJsonResponseDTO: utils.GenericJsonResponseDTO{
 				Message: "Invalid Request Body",
 			},
-			err: err,
+			Err: err.Error(),
 		})
 		return
 	}
@@ -163,12 +163,12 @@ func LoginViaPhone(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
 			utils.GenericJsonResponseDTO
-			err error
+			Err string `json:"err"`
 		}{
 			GenericJsonResponseDTO: utils.GenericJsonResponseDTO{
 				Message: "Invalid Request Body",
 			},
-			err: err,
+			Err: err.Error(),
 		})
 		return
 	}

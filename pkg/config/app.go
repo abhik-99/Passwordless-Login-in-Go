@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/abhik-99/passwordless-login/pkg/utils"
@@ -24,12 +25,12 @@ var (
 	redisCancel context.CancelFunc
 )
 
-func Connect() {
+func init() {
 	MongoCtx, mongoCancel = context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(MongoCtx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s@localhost:27017/?retryWrites=true&w=majority", utils.GetENV("DBUSER"), utils.GetENV("DBPASS"))))
+	client, err := mongo.Connect(MongoCtx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s@localhost:27017/?retryWrites=true&w=majority", utils.GetENV("DBUSER"), utils.GetENV("DBPASS"))).SetConnectTimeout(30*time.Second))
 	if err != nil {
 		// panic(err)
-		fmt.Println(err)
+		log.Println(err)
 	}
 	Db = client.Database("passwordless-auth")
 

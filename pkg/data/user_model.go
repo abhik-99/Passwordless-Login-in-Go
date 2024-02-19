@@ -28,7 +28,7 @@ func CreateNewUser(user CreateUserDTO) (*mongo.InsertOneResult, error) {
 
 func GetAllPublicUserProfiles() ([]PublicUserProfileDTO, error) {
 	var users []PublicUserProfileDTO
-	cursor, err := userCollection.Find(ctx, bson.M{"public": "true"})
+	cursor, err := userCollection.Find(ctx, bson.M{})
 	if err != nil {
 		return users, err
 	}

@@ -9,7 +9,7 @@ import (
 // Un-Protected Routes
 func RegisterAuthRoutes(r *mux.Router) {
 
-	r.HandleFunc("/singup", controllers.Signup).Methods("POST")
+	r.HandleFunc("/signup", controllers.Signup).Methods("POST")
 
 	//This initiates the Email-based authentication,
 	r.HandleFunc("/email/{emailId}", controllers.OTPViaEmail).Methods("GET")

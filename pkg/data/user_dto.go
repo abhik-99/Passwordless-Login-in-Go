@@ -6,7 +6,7 @@ import (
 
 // Input validation for required values and such
 type CreateUserDTO struct {
-	Pic   string `bson:"profilePic" json:"profilePic" validate:"uri"`
+	Pic   string `bson:"profilePic" json:"profilePic" validate:"url"`
 	Name  string `bson:"name" json:"name" validate:"required,max=30"`
 	Email string `bson:"email" json:"email" validate:"required,email"`
 	Phone string `bson:"phone" json:"phone" validate:"required,e164"`

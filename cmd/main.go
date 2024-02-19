@@ -12,9 +12,9 @@ import (
 )
 
 func main() {
-	config.Connect()
 	defer config.Disconnect()
 	router := mux.NewRouter()
+	router.StrictSlash(true)
 
 	authRouter := router.PathPrefix("/auth").Subrouter()
 	routes.RegisterAuthRoutes(authRouter)
@@ -22,7 +22,7 @@ func main() {
 	userRouter := router.PathPrefix("/user").Subrouter()
 	routes.RegisterUserRoutes(userRouter)
 
-	fmt.Println("Starting on PORT 3000")
+	fmt.Println("Started on PORT 3000")
 	http.Handle("/", router)
 
 	log.Fatal(http.ListenAndServe(":3000", router))

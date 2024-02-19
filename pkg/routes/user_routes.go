@@ -8,6 +8,7 @@ import (
 
 // Protected Routes
 func RegisterUserRoutes(r *mux.Router) {
+	// r.Use(middleware.ValidateTokenMiddleware)
 	r.HandleFunc("/", controllers.GetPublicUsers).Methods("GET")
 	r.HandleFunc("/{id}", controllers.GetPublicUserProfile).Methods("GET")
 	r.HandleFunc("/profile", controllers.GetUserProfile).Methods("GET")

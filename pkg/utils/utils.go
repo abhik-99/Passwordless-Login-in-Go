@@ -72,22 +72,24 @@ func GenerateJWT(id string) (string, error) {
 
 func ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
+
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("Invalid Token Signing Method: %v", token.Header["alg"])
 		}
 
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return []byte(GetENV("JWT_SECRET")), nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	if !token.Valid {
+		return nil, fmt.Errorf("Invalid Token")
+	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		return claims, nil
 	} else {
-		return nil, err
+		return nil, fmt.Errorf("Invalid Token Claim")
 	}
 
 }
