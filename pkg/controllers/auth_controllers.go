@@ -36,16 +36,12 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 func OTPViaEmail(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	if email, err := mail.ParseAddress(params["emailId"]); err != nil {
+	if _, err := mail.ParseAddress(params["emailId"]); err != nil {
 		http.Error(w, "Invalid Email", http.StatusBadRequest)
 		return
 	} else {
-		if result, userID, lookUpErr := data.UserLookupViaEmail(email.String()); lookUpErr != nil {
-			http.Error(w, "Error Ocurred while Lookup", http.StatusInternalServerError)
-			fmt.Println("[ERROR] ", lookUpErr)
-			return
-		} else if !result {
-			http.Error(w, "User Not Found", http.StatusNotFound)
+		if _, userID, lookUpErr := data.UserLookupViaEmail(params["emailId"]); lookUpErr != nil {
+			http.Error(w, "User does not exist", http.StatusUnauthorized)
 			return
 		} else {
 			otp, err := utils.OTPGenerator()
@@ -60,7 +56,7 @@ func OTPViaEmail(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("[ERROR] ", err)
 				return
 			}
-			if err := utils.SendOTPMail(email.String(), otp); err != nil {
+			if err := utils.SendOTPMail(params["emailId"], otp); err != nil {
 				http.Error(w, "Error Occurred while setting user OTP", http.StatusInternalServerError)
 				fmt.Println("[ERROR] ", err)
 				return
@@ -113,7 +109,7 @@ func OTPViaPhone(w http.ResponseWriter, r *http.Request) {
 
 func LoginViaEmail(w http.ResponseWriter, r *http.Request) {
 	var dto data.LoginWithEmailDTO
-	err := utils.DecodeJSONRequest(r, dto)
+	err := utils.DecodeJSONRequest(r, &dto)
 	if err != nil {
 		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
 			utils.GenericJsonResponseDTO
@@ -159,7 +155,7 @@ func LoginViaEmail(w http.ResponseWriter, r *http.Request) {
 
 func LoginViaPhone(w http.ResponseWriter, r *http.Request) {
 	var dto data.LoginWithPhoneDTO
-	err := utils.DecodeJSONRequest(r, dto)
+	err := utils.DecodeJSONRequest(r, &dto)
 	if err != nil {
 		utils.EncodeJSONResponse(w, http.StatusBadRequest, struct {
 			utils.GenericJsonResponseDTO
@@ -172,15 +168,10 @@ func LoginViaPhone(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	result, userID, lookUpErr := data.UserLookupViaPhone(dto.Phone)
+	_, userID, lookUpErr := data.UserLookupViaPhone(dto.Phone)
 
-	if !result {
-		http.Error(w, "User Does not Exist", http.StatusNotFound)
-		return
-	}
 	if lookUpErr != nil {
-		http.Error(w, "Error Ocurred while Lookup", http.StatusInternalServerError)
-		fmt.Println("[ERROR] ", lookUpErr)
+		http.Error(w, "User Does not Exist", http.StatusUnauthorized)
 		return
 	}
 	a := data.Auth{UserId: userID, Otp: dto.Otp}

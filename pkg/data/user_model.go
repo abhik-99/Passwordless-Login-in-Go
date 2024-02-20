@@ -40,8 +40,8 @@ func GetAllPublicUserProfiles() ([]PublicUserProfileDTO, error) {
 	}
 }
 
-func GetPrivateUserProfile(id string) (User, error) {
-	var user User
+func GetUserProfileById(id string) (PublicFullUserProfileDTO, error) {
+	var user PublicFullUserProfileDTO
 	obId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return user, err

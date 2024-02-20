@@ -24,14 +24,15 @@ func ValidateTokenMiddleware(next http.Handler) http.Handler {
 
 		tokenString = splitToken[1]
 
-		_, err := utils.ValidateJWT(tokenString)
+		tokenClaims, err := utils.ValidateJWT(tokenString)
 
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+		userId, _ := tokenClaims.GetSubject()
+		r.Header.Set("user", userId)
 
-		// Token is valid, proceed to the next handler
 		next.ServeHTTP(w, r)
 	})
 }

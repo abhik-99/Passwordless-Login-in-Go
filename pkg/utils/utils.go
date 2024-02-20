@@ -17,6 +17,7 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/twilio/twilio-go"
 	api "github.com/twilio/twilio-go/rest/api/v2010"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var validate = validator.New()
@@ -64,10 +65,10 @@ func GenerateJWT(id string) (string, error) {
 		// Also fixed dates can be used for the NumericDate
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 2)),
 		Issuer:    GetENV("JWT_ISSUER"),
-		ID:        id,
+		Subject:   id,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(GetENV("JWT_SECRET"))
+	return token.SignedString([]byte(GetENV("JWT_SECRET")))
 }
 
 func ValidateJWT(tokenString string) (jwt.MapClaims, error) {
@@ -112,7 +113,7 @@ func OTPGenerator() (string, error) {
 
 func SendOTPMail(receipientEmail string, otp string) error {
 	from := mail.NewEmail(GetENV("SENDER_NAME"), GetENV("SENDER_EMAIL")) // Change to your verified sender
-	subject := "Sending with Twilio SendGrid is Fun"
+	subject := "Your Login OTP"
 	to := mail.NewEmail(receipientEmail, receipientEmail)
 	plainTextContent := fmt.Sprintf("Your OTP is %s", otp)
 	htmlContent := fmt.Sprintf("Your OTP is <strong>%s</string>", otp)
@@ -137,4 +138,16 @@ func SendOTPSms(receipientNo string, otp string) error {
 
 	_, err := client.Api.CreateMessage(params)
 	return err
+}
+
+func IsValidObjectID(id string) bool {
+	// Use a regular expression to check for the correct format (hexadecimal, 24 characters).
+	objectIDRegex := regexp.MustCompile(`^[0-9a-fA-F]{24}$`)
+	if !objectIDRegex.MatchString(id) {
+		return false
+	}
+
+	// Use the MongoDB Go driver to try parsing the string as an ObjectID.
+	_, err := primitive.ObjectIDFromHex(id)
+	return err == nil
 }
